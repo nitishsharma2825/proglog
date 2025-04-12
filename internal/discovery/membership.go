@@ -31,7 +31,7 @@ type Config struct {
 	NodeName       string
 	BindAddr       string
 	Tags           map[string]string
-	StartJoinAddrs []string
+	StartJoinAddrs []string // initial set of addresses a new memeber can talk to
 }
 
 func (m *Membership) setupSerf() (err error) {
