@@ -270,3 +270,42 @@ func (f *fsm) Restore(r io.ReadCloser) error {
 	}
 	return nil
 }
+
+var _ raft.LogStore = (*logStore)(nil)
+
+type logStore struct {
+	*Log
+}
+
+func newLogStore(dir string, c Config) (*logStore, error) {
+	log, err := NewLog(dir, c)
+	if err != nil {
+		return nil, err
+	}
+	return &logStore{Log: log}, nil
+}
+
+func (l *logStore) FirstIndex() (uint64, error) {
+	return l.LowestOffset()
+}
+
+func (l *logStore) LastIndex() (uint64, error) {
+	off, err := l.HighestOffset()
+	return off, err
+}
+
+func (l *logStore) GetLog(index uint64, out *raft.Log) error {
+	in, err := l.Read(index)
+	if err != nil {
+		return err
+	}
+	out.Data = in.Value
+	out.Index = in.Offset
+	out.Type = raft.LogType(in.Type)
+	out.Term = in.Term
+	return nil
+}
+
+func (l *logStore) StoreLog(record *raft.Log) error {
+	return l.StoreLog([]*raft.Log{record})
+}
